@@ -14,14 +14,14 @@
   ],
   "repository": {
     "type": "git",
-    "url": "https://github.com/gillesdemey/node-record-lpcm16"
+    "url": "https://github.com/seungmanchoi/node-record-lpcm16"
   },
-  "author": "Gilles De Mey",
+  "author": "Seungman Choi",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/gillesdemey/node-record-lpcm16/issues"
+    "url": "https://github.com/seungmanchoi/node-record-lpcm16/issues"
   },
-  "homepage": "https://github.com/gillesdemey/node-record-lpcm16",
+  "homepage": "https://github.com/seungmanchoi/node-record-lpcm16",
   "directories": {
     "example": "examples"
   }
