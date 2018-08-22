@@ -1,7 +1,6 @@
 'use strict'
 
 var spawn = require('child_process').spawn
-
 var cp // Recording process
 
 // returns a Readable stream
@@ -10,7 +9,6 @@ exports.start = function (options) {
 
   var defaults = {
     sampleRate: 16000,
-    channels: 1,
     compress: false,
     threshold: 0.5,
     thresholdStart: null,
@@ -28,28 +26,20 @@ exports.start = function (options) {
     // On some Windows machines, sox is installed using the "sox" binary
     // instead of "rec"
     case 'sox':
-      var cmd = 'sox';
-      var cmdArgs = [
-        '-q',                     // show no progress
-        '-t', 'waveaudio',        // audio type
-        '-d',                     // use default recording device
-        '-r', options.sampleRate, // sample rate
-        '-c', options.channels,   // channels
-        '-e', 'signed-integer',   // sample encoding
-        '-b', '16',               // precision (bits)
-        '-',                      // pipe
-        // end on silence
-        'silence', '1', '0.1', options.thresholdStart || options.threshold + '%',
-        '1', options.silence, options.thresholdEnd || options.threshold + '%'
-      ];
-      break
     case 'rec':
     default:
-      cmd = options.recordProgram
-      cmdArgs = [
+      var cmdArgs1 = [
         '-q',                     // show no progress
+        '-t', 'waveaudio',
+      ]
+
+      if(options.defaultDevice) {
+        cmdArgs1.push('-d');
+      }
+
+      var cmdArgs2 = [
         '-r', options.sampleRate, // sample rate
-        '-c', options.channels,   // channels
+        '-c', '1',                // channels
         '-e', 'signed-integer',   // sample encoding
         '-b', '16',               // precision (bits)
         '-t', 'wav',              // audio type
@@ -58,6 +48,9 @@ exports.start = function (options) {
         'silence', '1', '0.1', options.thresholdStart || options.threshold + '%',
         '1', options.silence, options.thresholdEnd || options.threshold + '%'
       ]
+      cmd = options.recordProgram
+      cmdArgs = cmdArgs1.concat(cmdArgs2);
+
       break
     // On some systems (RasPi), arecord is the prefered recording binary
     case 'arecord':
@@ -65,7 +58,7 @@ exports.start = function (options) {
       cmdArgs = [
         '-q',                     // show no progress
         '-r', options.sampleRate, // sample rate
-        '-c', options.channels,   // channels
+        '-c', '1',                // channels
         '-t', 'wav',              // audio type
         '-f', 'S16_LE',           // Sample format
         '-'                       // pipe
@@ -75,18 +68,16 @@ exports.start = function (options) {
       }
       break
   }
-
   // Spawn audio capture command
   cmdOptions = { encoding: 'binary' }
   if (options.device) {
     cmdOptions.env = Object.assign({}, process.env, { AUDIODEV: options.device })
   }
-  cp = spawn(cmd, cmdArgs, cmdOptions)
+  cp = spawn(options.recordProgramPath + cmd, cmdArgs, cmdOptions)
   var rec = cp.stdout
 
   if (options.verbose) {
-    console.log('Recording', options.channels, 'channels with sample rate',
-        options.sampleRate + '...')
+    console.log('Recording with sample rate', options.sampleRate + '...')
     console.time('End Recording')
 
     rec.on('data', function (data) {
